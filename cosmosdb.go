@@ -215,7 +215,7 @@ func (r *CosmosDBOrderRepo) UpdateOrder(order Order) error {
 	var existingOrderId string
 	pk := azcosmos.NewPartitionKeyString(r.partitionKey.Value)
 
-	// 1. Find the internal Cosmos DB 'id' using the application 'orderId'
+	// find the internal Cosmos DB 'id' using the application 'orderId'
 	opt := &azcosmos.QueryOptions{
 		QueryParameters: []azcosmos.QueryParameter{
 			{Name: "@orderId", Value: order.OrderID},
@@ -250,16 +250,16 @@ func (r *CosmosDBOrderRepo) UpdateOrder(order Order) error {
 		return nil
 	}
 
-	// 2. Create the Patch Operations
+	// create the patch operations
 	patch := azcosmos.PatchOperations{}
 
-	// Update Status
+	// update status
 	patch.AppendReplace("/status", order.Status)
 
-	// Update Items (Critical for Delete Item functionality)
+	// update items (critical for delete item functionality)
 	patch.AppendReplace("/items", order.Items)
 
-	// 3. Execute Patch
+	// execute patch
 	_, err := r.db.PatchItem(context.Background(), pk, existingOrderId, patch, nil)
 	if err != nil {
 		log.Printf("failed to patch item: %v\n", err)
@@ -269,10 +269,9 @@ func (r *CosmosDBOrderRepo) UpdateOrder(order Order) error {
 	return nil
 }
 
-// Deletes an order by OrderID
+// deletes an order by orderID
 func (r *CosmosDBOrderRepo) DeleteOrder(id string) error {
-	// 1. Find the internal Cosmos 'id' using the OrderID
-	// (Cosmos needs the partition key AND the internal 'id' to delete)
+	// find the internal Cosmos 'id' using the orderID
 	var existingId string
 	pk := azcosmos.NewPartitionKeyString(r.partitionKey.Value)
 	opt := &azcosmos.QueryOptions{
@@ -302,10 +301,10 @@ func (r *CosmosDBOrderRepo) DeleteOrder(id string) error {
 
 	if existingId == "" {
 		log.Printf("No order found with ID %s to delete", id)
-		return nil // Or return error "not found"
+		return nil
 	}
 
-	// 2. Delete the item
+	// delete the item
 	_, err := r.db.DeleteItem(context.Background(), pk, existingId, nil)
 	if err != nil {
 		log.Printf("failed to delete item: %v\n", err)
