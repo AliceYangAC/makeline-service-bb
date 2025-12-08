@@ -287,7 +287,7 @@ func getEnvVar(varName string, fallbackVarNames ...string) string {
 
 // Initializes the database based on the API type
 func initDatabase(apiType string) (*OrderService, error) {
-	dbURI := getEnvVar("AZURE_COSMOS_RESOURCEENDPOINT", "ORDER_DB_URI")
+	dbURI := getEnvVar("AZURE_COSMOS_RESOURCEENDPOINT", "MONGO_URI")
 	dbName := getEnvVar("ORDER_DB_NAME")
 
 	switch apiType {
