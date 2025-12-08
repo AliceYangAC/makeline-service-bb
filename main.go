@@ -90,17 +90,6 @@ func startOrderListener(service *OrderService) {
 		log.Println("Listener connected via Workload Identity.")
 	}
 
-	// // Create shipping sender from environment variable
-	// shippingQueueName := os.Getenv("SHIPPING_QUEUE_NAME")
-	// if shippingQueueName == "" {
-	// 	shippingQueueName = "shipping"
-	// }
-
-	// shippingSender, err := client.NewSender(shippingQueueName, nil)
-	// if err != nil {
-	// 	log.Fatalf("Failed to create shipping sender: %v", err)
-	// }
-
 	// Define the handler function for processing each order
 	saveToDbHandler := func(order Order) error {
 		log.Printf("Processing Order ID: %s", order.OrderID)
@@ -111,30 +100,6 @@ func startOrderListener(service *OrderService) {
 			log.Printf("DB Error: %v", err)
 			return err
 		}
-
-		// Create a specific payload for the shipping service
-		// shippingPayload := map[string]interface{}{
-		// 	"orderId":  order.OrderID,
-		// 	"shipping": order.Shipping,
-		// }
-
-		// body, err := json.Marshal(shippingPayload)
-		// if err != nil {
-		// 	log.Printf("Failed to marshal shipping payload: %v", err)
-		// 	// Don't fail the order just because shipping notification failed
-		// 	return nil
-		// }
-
-		// err = shippingSender.SendMessage(ctx, &azservicebus.Message{
-		// 	Body: body,
-		// }, nil)
-
-		// if err != nil {
-		// 	log.Printf("Failed to send to shipping queue: %v", err)
-		// 	// Ideally, you might want to implement a retry here or flag the DB record
-		// } else {
-		// 	log.Printf("Shipping request sent for Order %s", order.OrderID)
-		// }
 
 		log.Println("Order processing complete.")
 		return nil
