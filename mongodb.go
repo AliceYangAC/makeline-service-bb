@@ -14,6 +14,7 @@ type MongoDBOrderRepo struct {
 	db *mongo.Collection
 }
 
+// NewMongoDBOrderRepo creates a new MongoDBOrderRepo
 func NewMongoDBOrderRepo(mongoUri string, mongoDb string, mongoCollection string, mongoUser string, mongoPassword string) (*MongoDBOrderRepo, error) {
 	// create a context
 	ctx := context.Background()
@@ -53,6 +54,7 @@ func NewMongoDBOrderRepo(mongoUri string, mongoDb string, mongoCollection string
 	return &MongoDBOrderRepo{collection}, nil
 }
 
+// Gets all orders from the database
 func (r *MongoDBOrderRepo) GetAllOrders() ([]Order, error) {
 	ctx := context.TODO()
 
@@ -86,36 +88,7 @@ func (r *MongoDBOrderRepo) GetAllOrders() ([]Order, error) {
 	return orders, nil
 }
 
-// func (r *MongoDBOrderRepo) GetPendingOrders() ([]Order, error) {
-// 	ctx := context.TODO()
-
-// 	var orders []Order
-// 	cursor, err := r.db.Find(ctx, bson.M{"status": Pending})
-// 	if err != nil {
-// 		log.Printf("Failed to find records: %s", err)
-// 		return nil, err
-// 	}
-// 	defer cursor.Close(ctx)
-
-// 	// Check if there was an error during iteration
-// 	if err := cursor.Err(); err != nil {
-// 		log.Printf("Failed to find records: %s", err)
-// 		return nil, err
-// 	}
-
-// 	// Iterate over the cursor and decode each document
-// 	for cursor.Next(ctx) {
-// 		var pendingOrder Order
-// 		if err := cursor.Decode(&pendingOrder); err != nil {
-// 			log.Printf("Failed to decode order: %s", err)
-// 			return nil, err
-// 		}
-// 		orders = append(orders, pendingOrder)
-// 	}
-
-// 	return orders, nil
-// }
-
+// Gets a single order by ID
 func (r *MongoDBOrderRepo) GetOrder(id string) (Order, error) {
 	var ctx = context.TODO()
 
@@ -133,6 +106,7 @@ func (r *MongoDBOrderRepo) GetOrder(id string) (Order, error) {
 	return order, nil
 }
 
+// Inserts multiple orders into the database
 func (r *MongoDBOrderRepo) InsertOrders(orders []Order) error {
 	ctx := context.TODO()
 
@@ -156,6 +130,7 @@ func (r *MongoDBOrderRepo) InsertOrders(orders []Order) error {
 	return nil
 }
 
+// Updates an existing order
 func (r *MongoDBOrderRepo) UpdateOrder(order Order) error {
 	var ctx = context.TODO()
 
