@@ -14,6 +14,7 @@ type MongoDBOrderRepo struct {
 	db *mongo.Collection
 }
 
+// NewMongoDBOrderRepo creates a new MongoDBOrderRepo
 func NewMongoDBOrderRepo(mongoUri string, mongoDb string, mongoCollection string, mongoUser string, mongoPassword string) (*MongoDBOrderRepo, error) {
 	// create a context
 	ctx := context.Background()
@@ -53,11 +54,14 @@ func NewMongoDBOrderRepo(mongoUri string, mongoDb string, mongoCollection string
 	return &MongoDBOrderRepo{collection}, nil
 }
 
-func (r *MongoDBOrderRepo) GetPendingOrders() ([]Order, error) {
+// Gets all orders from the database
+func (r *MongoDBOrderRepo) GetAllOrders() ([]Order, error) {
 	ctx := context.TODO()
 
 	var orders []Order
-	cursor, err := r.db.Find(ctx, bson.M{"status": Pending})
+
+	cursor, err := r.db.Find(ctx, bson.M{})
+
 	if err != nil {
 		log.Printf("Failed to find records: %s", err)
 		return nil, err
@@ -72,17 +76,19 @@ func (r *MongoDBOrderRepo) GetPendingOrders() ([]Order, error) {
 
 	// Iterate over the cursor and decode each document
 	for cursor.Next(ctx) {
-		var pendingOrder Order
-		if err := cursor.Decode(&pendingOrder); err != nil {
+		var order Order
+		// Ensure your struct BSON tags match your DB if decoding fails
+		if err := cursor.Decode(&order); err != nil {
 			log.Printf("Failed to decode order: %s", err)
 			return nil, err
 		}
-		orders = append(orders, pendingOrder)
+		orders = append(orders, order)
 	}
 
 	return orders, nil
 }
 
+// Gets a single order by ID
 func (r *MongoDBOrderRepo) GetOrder(id string) (Order, error) {
 	var ctx = context.TODO()
 
@@ -100,6 +106,7 @@ func (r *MongoDBOrderRepo) GetOrder(id string) (Order, error) {
 	return order, nil
 }
 
+// Inserts multiple orders into the database
 func (r *MongoDBOrderRepo) InsertOrders(orders []Order) error {
 	ctx := context.TODO()
 
@@ -123,25 +130,49 @@ func (r *MongoDBOrderRepo) InsertOrders(orders []Order) error {
 	return nil
 }
 
+// Updates an existing order
 func (r *MongoDBOrderRepo) UpdateOrder(order Order) error {
 	var ctx = context.TODO()
 
-	filter := bson.D{{Key: "orderid", Value: bson.D{{Key: "$eq", Value: order.OrderID}}}}
+	filter := bson.D{{Key: "orderid", Value: order.OrderID}}
 
-	// Update the order
-	log.Printf("Updating order: %v", order)
-	updateResult, err := r.db.UpdateMany(
-		ctx,
-		filter,
-		bson.D{
-			{Key: "$set", Value: bson.D{{Key: "status", Value: order.Status}}},
-		},
-	)
+	// Define the update: Set Status AND Items
+	update := bson.D{
+		{Key: "$set", Value: bson.D{
+			{Key: "status", Value: order.Status},
+			{Key: "items", Value: order.Items},
+		}},
+	}
+
+	log.Printf("Updating order %s: Status=%v, ItemsCount=%d", order.OrderID, order.Status, len(order.Items))
+
+	updateResult, err := r.db.UpdateOne(ctx, filter, update)
 	if err != nil {
 		log.Printf("Failed to update order: %s", err)
 		return err
 	}
 
 	log.Printf("Matched %v documents and updated %v documents.\n", updateResult.MatchedCount, updateResult.ModifiedCount)
+	return nil
+}
+
+// Deletes an order by ID (Cancel Order)
+func (r *MongoDBOrderRepo) DeleteOrder(id string) error {
+	ctx := context.TODO()
+
+	filter := bson.D{{Key: "orderid", Value: id}}
+
+	deleteResult, err := r.db.DeleteOne(ctx, filter)
+	if err != nil {
+		log.Printf("Failed to delete order: %s", err)
+		return err
+	}
+
+	if deleteResult.DeletedCount == 0 {
+		log.Printf("No order found with ID %s to delete", id)
+	} else {
+		log.Printf("Deleted order with ID %s", id)
+	}
+
 	return nil
 }
